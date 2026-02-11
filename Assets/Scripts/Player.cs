@@ -1,13 +1,16 @@
+using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
     //normal PlayerState gets Rendered;
     public PlayerSpriteRenderer playerRenderer;
+    
 
     private DeathAnimations deathAnimation;
     public bool player => playerRenderer.enabled;
     public bool dead => deathAnimation.enabled;
+    public bool Starpower { get; private set; }
 
     private void Awake()
     {
@@ -15,17 +18,16 @@ public class Player : MonoBehaviour
     }
     public void Hit()
     {
-        if (player)
+        if (!dead && !Starpower)
         {
-            Death();
+            if (player)
+            {
+             Death();
+            }
         }
     }
     
-    private void GetRidOfBuff()
-    {
-        //if enhanced by buff e.g FireFlower gets rid 
-        //TODO because no flower yet
-    }
+    
     private void Death()
     {
         playerRenderer.enabled = false;
@@ -34,4 +36,32 @@ public class Player : MonoBehaviour
         GameManager.Instance.ResetLevel(3f);
     }
 
+    public void StarMan(float duration = 10f)
+    {
+        StartCoroutine(StarpowerAnimation(duration));
+    }
+
+    private IEnumerator StarpowerAnimation(float duration)
+    {
+        Starpower = true;
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+
+            if (Time.frameCount % 4 == 0)
+            {
+                playerRenderer.spriteRenderer.color = Random.ColorHSV(0f, 1f, 1f, 1f, 1f, 1f);
+            }   
+
+            yield return null;
+        }
+        
+
+        
+        playerRenderer.spriteRenderer.color = Color.white;
+        Starpower = false;
+    }
 }
