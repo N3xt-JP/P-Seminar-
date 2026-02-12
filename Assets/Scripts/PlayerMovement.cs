@@ -1,11 +1,12 @@
-using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
 
 public class PlayerMovement : MonoBehaviour
 { 
     public Rigidbody2D rb;
+    private new Camera camera;
+    private new Collider2D collider;
+
     public float moveSpeed = 5f;
     public float maxJumpHeight = 5f;
     public float maxJumpTime = 1f;
@@ -17,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
     public bool running => Mathf.Abs(rb.linearVelocity.x) > 0.1f && Grounded;
     public bool sliding => (rb.linearVelocity.x > 0f && transform.eulerAngles.y == 180f || rb.linearVelocity.x < 0f && transform.eulerAngles.y == 0f) && Grounded;
 
-    private new Camera camera;
+    
     private PlayerInput playerInput;
     private InputAction touchPositionAction;
     private InputAction touchPressAction;
@@ -29,8 +30,29 @@ public class PlayerMovement : MonoBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         camera = Camera.main;
         playerInput = GetComponent<PlayerInput>();
+        collider = GetComponent<Collider2D>();
         touchPressAction = playerInput.actions["TouchPress"];
         touchPositionAction = playerInput.actions["TouchPosition"];
+    }
+
+    private void OnEnable()
+    {
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        collider.enabled = true;
+        horizontalMovement = 0f;
+        Jumping = false;
+        touchPressAction.performed += TouchPressed;
+        touchPositionAction.performed += TouchPosition;
+    }
+
+    private void OnDisable()
+    {
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        collider.enabled = false;
+        horizontalMovement = 0f;
+        Jumping = false;
+        touchPressAction.performed -= TouchPressed;
+        touchPositionAction.performed -= TouchPosition;
     }
     private void Update()
     {   
@@ -120,17 +142,6 @@ public class PlayerMovement : MonoBehaviour
             }
             
         }
-    }
-    private void OnEnable()
-    {
-        touchPressAction.performed += TouchPressed;
-        touchPositionAction.performed += TouchPosition;
-    }
-
-    private void OnDisable()
-    {
-        touchPressAction.performed -= TouchPressed;
-        touchPositionAction.performed -= TouchPosition;
     }
 
     public void TouchPressed(InputAction.CallbackContext context)
